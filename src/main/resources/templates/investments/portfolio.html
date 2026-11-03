@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Portofoliu')}">
+<body><main>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-briefcase me-2 text-success"></i>Portofoliu Investitii</h2>
+    <div class="d-flex gap-2">
+        <a th:href="@{/investments/trade}" class="btn btn-success btn-sm">
+            <i class="bi bi-arrow-up-down me-1"></i>Cumpara/Vinde
+        </a>
+        <a th:href="@{/investments/funds}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-list-ul me-1"></i>Fonduri disponibile
+        </a>
+    </div>
+</div>
+
+<!-- Total portofoliu -->
+<div class="card border-0 shadow-sm mb-4 bg-success text-white">
+    <div class="card-body">
+        <p class="mb-1">Valoare totala portofoliu</p>
+        <h2 th:text="${#numbers.formatDecimal(totalValue, 1, 2) + ' USD'}">0</h2>
+    </div>
+</div>
+
+<!-- Pozitii deschise -->
+<div class="card border-0 shadow-sm mb-4" th:if="${!#lists.isEmpty(portfolio)}">
+    <div class="card-header bg-white"><h6 class="mb-0">Pozitii curente</h6></div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Simbol</th><th>Tip</th><th>Unitati</th>
+                    <th>Investit</th><th>Valoare curenta</th><th>P&L</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${portfolio}">
+                    <td>
+                        <strong th:text="${item.fund.symbol}"></strong><br>
+                        <small class="text-muted" th:text="${item.fund.name}"></small>
+                    </td>
+                    <td><span class="badge bg-info" th:text="${item.fund.fundType}"></span></td>
+                    <td th:text="${#numbers.formatDecimal(item.netUnits, 1, 4)}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.netInvestedValue, 1, 2) + ' ' + item.fund.currency}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.currentValue, 1, 2) + ' ' + item.fund.currency}"></td>
+                    <td th:classappend="${item.profitLoss.signum() >= 0 ? 'text-success fw-bold' : 'text-danger fw-bold'}"
+                        th:text="${(item.profitLoss.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(item.profitLoss, 1, 2) + ' (' + item.profitLossPct + '%)'}">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:if="${#lists.isEmpty(portfolio)}" class="text-center py-5 text-muted">
+    <i class="bi bi-briefcase fs-1 d-block mb-3"></i>
+    Nu ai nicio investitie. <a th:href="@{/investments/trade}">Incepe sa investesti!</a>
+</div>
+
+<!-- Istoric tranzactii -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white"><h6 class="mb-0">Istoric tranzactii investitii</h6></div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(recentTx)}">
+            <thead class="table-light">
+                <tr><th>Data</th><th>Fond</th><th>Operatie</th><th>Unitati</th><th>Pret/unitate</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="tx : ${recentTx}">
+                    <td th:text="${#temporals.format(tx.transactionDate, 'dd.MM.yyyy')}"></td>
+                    <td th:text="${tx.fund.symbol}"></td>
+                    <td><span class="badge" th:classappend="${tx.operationType.name() == 'BUY' ? 'bg-success' : 'bg-danger'}" th:text="${tx.operationType}"></span></td>
+                    <td th:text="${#numbers.formatDecimal(tx.units, 1, 4)}"></td>
+                    <td th:text="${#numbers.formatDecimal(tx.pricePerUnit, 1, 4) + ' ' + tx.currency}"></td>
+                    <td th:text="${#numbers.formatDecimal(tx.totalValue, 1, 2) + ' ' + tx.currency}"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div th:if="${#lists.isEmpty(recentTx)}" class="p-3 text-center text-muted">Nicio tranzactie inca.</div>
+    </div>
+</div>
+
+</main></body>
+</html>

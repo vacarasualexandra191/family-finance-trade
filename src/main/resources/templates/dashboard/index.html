@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Dashboard')}">
+<body><main>
+
+    <!-- ============ DASHBOARD COPIL ============ -->
+    <div th:if="${currentUser != null and currentUser.familyRole == 'COPIL'}">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-speedometer2 me-2 text-success"></i>Buna, <span th:text="${currentUser.fullName}"></span>!</h2>
+            <span class="text-muted" th:text="${report.month + '/' + report.year}"></span>
+        </div>
+
+        <div class="card border-0 shadow-sm text-white bg-success mb-4">
+            <div class="card-body text-center py-4">
+                <p class="mb-1 opacity-75 fs-5">Sold disponibil</p>
+                <h1 class="display-4 fw-bold"
+                    th:text="${#numbers.formatDecimal(currentUser.balance != null ? currentUser.balance : 0, 1, 2) + ' RON'}">
+                    0.00 RON
+                </h1>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm bg-danger text-white">
+                    <div class="card-body text-center">
+                        <p class="small mb-1 opacity-75">Cheltuit luna aceasta</p>
+                        <h3 th:text="${#numbers.formatDecimal(report.totalExpense, 1, 2) + ' RON'}">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm"
+                     th:classappend="${report.savings.signum() >= 0 ? 'bg-primary text-white' : 'bg-warning'}">
+                    <div class="card-body text-center">
+                        <p class="small mb-1 opacity-75">Bani ramasi din sold initial</p>
+                        <h3 th:text="${#numbers.formatDecimal(currentUser.balance != null ? currentUser.balance : 0, 1, 2) + ' RON'}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-4">
+            <a th:href="@{/transactions/new}" class="btn btn-success btn-lg">
+                <i class="bi bi-plus-circle me-2"></i>Adauga cheltuiala
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <h6 class="mb-0"><i class="bi bi-clock-history me-2 text-success"></i>Istoricul cheltuielilor</h6>
+                <a th:href="@{/transactions}" class="btn btn-sm btn-outline-success">Vezi toate</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(report.transactions)}">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Descriere</th>
+                        <th>Subcategorie</th>
+                        <th class="text-end">Suma</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t,tStat : ${report.transactions}" th:if="${tStat.index &lt; 10}">
+                        <td th:text="${#temporals.format(t.transactionDate, 'dd.MM.yyyy')}"></td>
+                        <td th:text="${t.description}"></td>
+                        <td><span class="badge bg-secondary" th:text="${t.subCategory}"></span></td>
+                        <td class="text-end fw-bold text-danger"
+                            th:text="${'-' + #numbers.formatDecimal(t.amount, 1, 2) + ' RON'}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div th:if="${#lists.isEmpty(report.transactions)}" class="p-4 text-center text-muted">
+                    <i class="bi bi-emoji-smile fs-1 d-block mb-2 text-success"></i>
+                    Nicio cheltuiala luna aceasta!
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div th:if="${currentUser == null or currentUser.familyRole != 'COPIL'}">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-speedometer2 me-2 text-success"></i>Dashboard Financiar</h2>
+            <span class="text-muted" th:text="${report.month + '/' + report.year}"></span>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-success text-white">
+                    <div class="card-body">
+                        <p class="small mb-1 opacity-75">Venituri luna curenta</p>
+                        <h4 th:text="${#numbers.formatDecimal(report.totalIncome, 1, 2) + ' RON'}">0</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-danger text-white">
+                    <div class="card-body">
+                        <p class="small mb-1 opacity-75">Cheltuieli luna curenta</p>
+                        <h4 th:text="${#numbers.formatDecimal(report.totalExpense, 1, 2) + ' RON'}">0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!--
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-white"
+                     th:classappend="${report.savings.signum() >= 0 ? 'bg-primary' : 'bg-warning'}">
+                    <div class="card-body">
+                        <p class="small mb-1 opacity-75">Economii luna curenta</p>
+                        <h4 th:text="${#numbers.formatDecimal(report.savings, 1, 2) + ' RON'}">0</h4>
+                        <small th:if="${savingsAfterInvestments != null}" class="opacity-75"
+                               th:text="${'Dupa investitii: ' + #numbers.formatDecimal(savingsAfterInvestments, 1, 2) + ' RON'}">
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-info text-white">
+                    <div class="card-body">
+                        <p class="small mb-1 opacity-75">Portofoliu investitii</p>
+                        <h4 th:text="${#numbers.formatDecimal(portfolioValue, 1, 2) + ' USD'}">0</h4>
+                        <small th:if="${portfolioValueRon != null}" class="opacity-75"
+                               th:text="${'~' + #numbers.formatDecimal(portfolioValueRon, 1, 2) + ' RON'}">
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            -->
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="bi bi-piggy-bank me-2 text-success"></i>Rata de economisire</h6>
+                        <div class="progress mb-2" style="height:20px;">
+                            <div class="progress-bar bg-success"
+                                 th:style="${'width:' + (report.savingsRate.doubleValue() > 100 ? 100 : report.savingsRate) + '%'}">
+                                <span th:text="${report.savingsRate + '%'}"></span>
+                            </div>
+                        </div>
+                        <small class="text-muted">Recomandat: minim 20% din venituri</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="bi bi-wallet2 me-2 text-success"></i>Muta in Economii</h6>
+                        <div class="d-flex justify-content-between small text-muted mb-2">
+                            <span>Venituri luna curenta:</span>
+                            <strong th:text="${#numbers.formatDecimal(report.totalIncome, 1, 2) + ' RON'}"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-3">
+                            <span>Economii alocate (total):</span>
+                            <strong class="text-success" th:text="${#numbers.formatDecimal(savingsBalance, 1, 2) + ' RON'}"></strong>
+                        </div>
+                        <form th:action="@{/dashboard/allocate-savings}" method="post" class="d-flex gap-2">
+                            <input type="number" step="0.01" min="0.01" name="amount"
+                                   class="form-control form-control-sm" placeholder="Suma RON" required="required"/>
+                            <button type="submit" class="btn btn-success btn-sm text-nowrap">
+                                <i class="bi bi-arrow-down-circle me-1"></i>Muta
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+        <div class="card border-0 shadow-sm mb-4" th:if="${portfolioValueRon != null}">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-graph-up me-2 text-success"></i>Economii vs Investitii</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <p class="text-muted small mb-1">Economii brute</p>
+                        <h5 th:classappend="${report.savings.signum() >= 0 ? 'text-primary' : 'text-danger'}"
+                            th:text="${#numbers.formatDecimal(report.savings, 1, 2) + ' RON'}"></h5>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="text-muted small mb-1">Investit in fonduri</p>
+                        <h5 class="text-warning"
+                            th:text="${#numbers.formatDecimal(portfolioValueRon, 1, 2) + ' RON'}"></h5>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="text-muted small mb-1">Economii ramase</p>
+                        <h5 th:classappend="${savingsAfterInvestments.signum() >= 0 ? 'text-success' : 'text-danger'}"
+                            th:text="${#numbers.formatDecimal(savingsAfterInvestments, 1, 2) + ' RON'}"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+       -->
+        <div class="card border-0 shadow-sm mb-4" th:if="${!#lists.isEmpty(portfolio)}">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <h6 class="mb-0"><i class="bi bi-briefcase me-2 text-success"></i>Portofoliu Investitii</h6>
+                <a th:href="@{/investments}" class="btn btn-sm btn-outline-success">Vezi tot</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                    <tr><th>Fond</th><th>Unitati</th><th>Valoare curenta</th><th>P&amp;L</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${portfolio}">
+                        <td>
+                            <strong th:text="${item.fund.symbol}"></strong><br/>
+                            <small class="text-muted" th:text="${item.fund.name}"></small>
+                        </td>
+                        <td th:text="${#numbers.formatDecimal(item.netUnits, 1, 4)}"></td>
+                        <td th:text="${#numbers.formatDecimal(item.currentValue, 1, 2) + ' ' + item.fund.currency}"></td>
+                        <td th:classappend="${item.profitLoss.signum() >= 0 ? 'text-success' : 'text-danger'}"
+                            th:text="${(item.profitLoss.signum() >= 0 ? '+' : '') + #numbers.formatDecimal(item.profitLoss, 1, 2) + ' (' + item.profitLossPct + '%)'}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <h6 class="mb-0"><i class="bi bi-clock-history me-2 text-success"></i>Ultimele tranzactii</h6>
+                <a th:href="@{/transactions}" class="btn btn-sm btn-outline-success">Vezi toate</a>
+                <a th:href="@{/dashboard/report-pdf}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Descarca raport PDF
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(report.transactions)}">
+                    <thead class="table-light">
+                    <tr><th>Data</th><th>Descriere</th><th>Subcategorie</th><th>Suma</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t,tStat : ${report.transactions}" th:if="${tStat.index &lt; 5}">
+                        <td th:text="${#temporals.format(t.transactionDate, 'dd.MM.yyyy')}"></td>
+                        <td th:text="${t.description}"></td>
+                        <td><span class="badge bg-secondary" th:text="${t.subCategory}"></span></td>
+                        <td th:classappend="${t.type.name() == 'INCOME' ? 'text-success fw-bold' : 'text-danger fw-bold'}"
+                            th:text="${(t.type.name() == 'INCOME' ? '+' : '-') + #numbers.formatDecimal(t.amount, 1, 2) + ' RON'}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div th:if="${#lists.isEmpty(report.transactions)}" class="p-3 text-center text-muted">
+                    Nicio tranzactie luna aceasta.
+                    <a th:href="@{/transactions/new}">Adauga prima!</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main></body>
+</html>

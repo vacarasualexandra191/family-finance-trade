@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Tinta Economii')}">
+<body><main>
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-piggy-bank me-2 text-success"></i>Seteaza Tinta de Economisire</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">Regula generala: economiseste minim <strong>20%</strong> din venitul lunar (regula 50/30/20: 50% nevoi, 30% dorinte, 20% economii).</p>
+                <form th:action="@{/reports/savings-goal}" method="post" th:object="${savingsGoal}">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Luna</label>
+                            <input type="number" th:field="*{month}" class="form-control" min="1" max="12" required/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Anul</label>
+                            <input type="number" th:field="*{year}" class="form-control" min="2020" max="2030" required/>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Venit lunar estimat (RON) *</label>
+                        <input type="number" step="0.01" th:field="*{monthlyIncome}" class="form-control" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Procent de economisit: <strong id="pctDisplay">20</strong>%</label>
+                        <input type="range" th:field="*{savingsPercentage}" class="form-range"
+                               min="1" max="80" oninput="document.getElementById('pctDisplay').textContent=this.value"/>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">1%</small>
+                            <small class="text-success fw-bold">20% recomandat</small>
+                            <small class="text-muted">80%</small>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Note (optional)</label>
+                        <input type="text" th:field="*{notes}" class="form-control" placeholder="ex: luna cu cheltuieli mai mari"/>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>Salveaza
+                        </button>
+                        <a th:href="@{/reports}" class="btn btn-outline-secondary">Anuleaza</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</main></body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Fonduri')}">
+<body><main>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-list-ul me-2 text-success"></i>Fonduri de Investitii</h2>
+        <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+           th:href="@{/investments/funds/new}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus me-1"></i>Adauga fond
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(funds)}">
+                <thead class="table-light">
+                <tr><th>Simbol</th><th>Nume</th><th>Tip</th><th>Risc</th><th>Orizont</th><th>Pret curent</th><th>Randament anual</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="fund : ${funds}">
+                    <td><strong th:text="${fund.symbol}"></strong></td>
+                    <td th:text="${fund.name}"></td>
+                    <td><span class="badge bg-info" th:text="${fund.fundType}"></span></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${fund.riskLevel.name() == 'SCAZUT' ? 'bg-success' : fund.riskLevel.name() == 'MEDIU' ? 'bg-warning' : 'bg-danger'}"
+                              th:text="${fund.riskLevel}"></span>
+                    </td>
+                    <td><span class="badge bg-secondary" th:text="${fund.timeHorizon}"></span></td>
+                    <td>
+                        <span th:if="${fund.currentPrice != null}" th:text="${#numbers.formatDecimal(fund.currentPrice, 1, 4) + ' ' + fund.currency}"></span>
+                        <span th:if="${fund.currentPrice == null}" class="text-muted">N/A</span>
+                    </td>
+                    <td th:text="${fund.annualReturnPct != null ? fund.annualReturnPct + '%' : '-'}"></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                               th:href="@{/investments/funds/{id}/refresh(id=${fund.id})}"
+                               class="btn btn-sm btn-outline-secondary" title="Actualizeaza pret">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </a>
+                            <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                               th:href="@{/investments/funds/{id}/edit(id=${fund.id})}"
+                               class="btn btn-sm btn-outline-primary" title="Editeaza">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                                  th:action="@{/investments/funds/{id}/delete(id=${fund.id})}"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Stergi fondul? Toate tranzactiile asociate vor fi sterse!')">
+                                <button class="btn btn-sm btn-outline-danger" title="Sterge">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(funds)}" class="p-4 text-center text-muted">
+                Niciun fond adaugat. <a th:href="@{/investments/funds/new}">Adauga primul fond!</a>
+            </div>
+        </div>
+    </div>
+
+</main></body>
+</html>

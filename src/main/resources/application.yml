@@ -1,0 +1,61 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: family-finance
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+    username: family_finance
+    password: finance123
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: alexandracon4321@gmail.com
+    password: zrtmsrvnutzwzgfr
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+  sql:
+    init:
+      mode: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.familyfinance: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+
+app:
+  alert:
+    email-to: alexandracon4321@gmail.com
+    expense-threshold-pct: 80
+  exchange-rate:
+    usd-to-ron: 4.8
+    eur-to-ron: 5.0

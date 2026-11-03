@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Recomandari Investitii')}">
+<body><main>
+
+    <h2 class="mb-4"><i class="bi bi-lightbulb me-2 text-success"></i>Recomandari Fonduri de Investitii</h2>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <p class="text-muted mb-3">Selecteaza profilul tau de investitor si/sau orizontul de timp pentru a vedea fondurile potrivite pentru tine.</p>
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nivel de risc acceptat</label>
+                    <select name="risk" class="form-select">
+                        <option value="">-- Selecteaza --</option>
+                        <option th:each="r : ${riskLevels}" th:value="${r}" th:text="${r}"
+                                th:selected="${r == selectedRisk}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Orizont de timp</label>
+                    <select name="horizon" class="form-select">
+                        <option value="">-- Selecteaza --</option>
+                        <option th:each="h : ${timeHorizons}" th:value="${h}" th:text="${h}"
+                                th:selected="${h == selectedHorizon}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-success w-100"><i class="bi bi-search me-1"></i>Gaseste fonduri</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ghid rapid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-top border-success border-3">
+                <div class="card-body">
+                    <h6 class="text-success">Risc SCAZUT</h6>
+                    <p class="small text-muted mb-0">Fonduri monetare, obligatiuni de stat. Randament 3-6%/an. Ideal pentru economii pe termen scurt (1-3 ani).</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-top border-warning border-3">
+                <div class="card-body">
+                    <h6 class="text-warning">Risc MEDIU</h6>
+                    <p class="small text-muted mb-0">Fonduri mixte, ETF-uri diversificate. Randament 6-10%/an. Ideal pentru obiective medii (3-7 ani).</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-top border-danger border-3">
+                <div class="card-body">
+                    <h6 class="text-danger">Risc RIDICAT</h6>
+                    <p class="small text-muted mb-0">ETF-uri sectoare, actiuni individuale. Randament 10-15%+/an. Ideal pentru termen lung (7+ ani).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rezultate -->
+    <div th:if="${suggestions != null}">
+        <h5 class="mb-3">Fonduri recomandate pentru profilul tau:</h5>
+        <div class="row g-3" th:if="${!#lists.isEmpty(suggestions)}">
+            <div class="col-md-4" th:each="fund : ${suggestions}">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h5 th:text="${fund.symbol}" class="mb-0"></h5>
+                            <span class="badge bg-info" th:text="${fund.fundType}"></span>
+                        </div>
+                        <p class="small text-muted" th:text="${fund.name}"></p>
+                        <p class="small mb-1" th:if="${fund.description}" th:text="${fund.description}"></p>
+                        <div class="d-flex justify-content-between mt-3">
+                            <span class="small text-muted">Randament estimat:</span>
+                            <strong class="text-success" th:text="${fund.annualReturnPct != null ? fund.annualReturnPct + '%/an' : 'N/A'}"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="small text-muted">Pret curent:</span>
+                            <strong th:text="${fund.currentPrice != null ? #numbers.formatDecimal(fund.currentPrice, 1, 2) + ' ' + fund.currency : 'N/A'}"></strong>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0">
+                        <a th:href="@{/investments/trade(fundId=${fund.id})}" class="btn btn-success btn-sm w-100">
+                            <i class="bi bi-plus me-1"></i>Cumpara acest fond
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:if="${#lists.isEmpty(suggestions)}" class="alert alert-info">
+            Nu am gasit fonduri cu profilul selectat. Incearca alte criterii de filtrare.
+        </div>
+    </div>
+
+</main></body>
+</html>

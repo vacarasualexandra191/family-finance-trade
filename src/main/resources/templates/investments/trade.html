@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Tranzactie Investitie')}">
+<body><main>
+
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-arrow-up-down me-2 text-success"></i>Cumpara / Vinde Unitati Fond</h5>
+                </div>
+                <div class="card-body">
+
+                    <form th:action="@{/investments/trade}" method="post"
+                          th:object="${form}" novalidate="novalidate" class="needs-validation" id="tradeForm">
+
+                        <!-- Fond -->
+                        <div class="mb-3">
+                            <label class="form-label">Fond *</label>
+                            <select th:field="*{fundId}" class="form-select" id="fundSelect" required="required">
+                                <option value="">-- Selecteaza fondul --</option>
+                                <option th:each="f : ${funds}"
+                                        th:value="${f.id}"
+                                        th:text="${f.symbol + ' — ' + f.name + ' (' + #numbers.formatDecimal(f.currentPrice, 1, 2) + ' ' + f.currency + '/UN)'}"
+                                        th:attr="data-price=${f.currentPrice},data-currency=${f.currency}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{fundId}"></div>
+                        </div>
+
+                        <!-- Operatie -->
+                        <div class="mb-3">
+                            <label class="form-label">Operatie *</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input type="radio" th:field="*{operationType}" value="BUY"
+                                           class="form-check-input" id="buy" checked="checked"/>
+                                    <label class="form-check-label text-success fw-bold" for="buy">
+                                        BUY (Cumpara)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" th:field="*{operationType}" value="SELL"
+                                           class="form-check-input" id="sell"/>
+                                    <label class="form-check-label text-danger fw-bold" for="sell">
+                                        SELL (Vinde)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unitati detinute - doar la SELL -->
+                        <div id="unitatiDetinute" class="alert alert-warning py-2 mb-3 d-none">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Detii <strong id="unitatiNr">0</strong> unitati din acest fond.
+                            <a href="#" id="vindeToatLink" class="ms-2 fw-bold">Vinde tot</a>
+                        </div>
+
+                        <!-- Numar unitati -->
+                        <div class="mb-3">
+                            <label class="form-label">Numar unitati *</label>
+                            <input type="number" step="0.0001" min="0.0001"
+                                   th:field="*{units}" id="unitsInput"
+                                   class="form-control" placeholder="ex: 2" required="required"/>
+                            <div class="invalid-feedback" th:errors="*{units}"></div>
+                        </div>
+
+                        <!-- Total tranzactie - calculat automat (unitati x pret) -->
+                        <div class="mb-3">
+                            <label class="form-label">Total tranzactie</label>
+                            <div class="input-group">
+                                <input type="text" id="totalInput"
+                                       class="form-control" readonly="readonly" placeholder="—"/>
+                                <span class="input-group-text" id="currencyLabel">—</span>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Numar unitati × pret curent (preluat automat din Yahoo Finance).
+                            </small>
+                        </div>
+
+                        <!-- Pret per unitate - trimis ascuns, folosit pentru calcul -->
+                        <input type="hidden" th:field="*{pricePerUnit}" id="priceInput"/>
+
+                        <!-- Moneda ascunsa - trimisa in background -->
+                        <input type="hidden" th:field="*{currency}" id="currencyHidden"/>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success" id="btnBuy">
+                                <i class="bi bi-check-lg me-1"></i>Executa BUY
+                            </button>
+                            <button type="submit" class="btn btn-danger d-none" id="btnSell">
+                                <i class="bi bi-check-lg me-1"></i>Executa SELL
+                            </button>
+                            <a th:href="@{/investments}" class="btn btn-outline-secondary">Anuleaza</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmare -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">Confirma tranzactia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Fond:</span>
+                        <strong id="modalFund">—</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Numar unitati:</span>
+                        <strong id="modalUnits">—</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Pret per unitate:</span>
+                        <strong id="modalPrice">—</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-2">
+                        <span class="fw-bold">TOTAL:</span>
+                        <strong class="fs-5" id="modalTotal">—</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuleaza</button>
+                    <button type="button" class="btn btn-success" id="modalConfirmBtn">
+                        <i class="bi bi-check-lg me-1"></i>Confirma
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var portfolioData = {};
+        (function() {
+            var portfolio = /*[[${portfolio}]]*/ [];
+            portfolio.forEach(function(item) {
+                portfolioData[item.fund.id] = item.netUnits;
+            });
+        })();
+
+        var fundSelect = document.getElementById('fundSelect');
+        var priceInput = document.getElementById('priceInput');
+        var currencyLabel = document.getElementById('currencyLabel');
+        var currencyHidden = document.getElementById('currencyHidden');
+        var totalInput = document.getElementById('totalInput');
+        var unitsInput = document.getElementById('unitsInput');
+
+        function syncFundData() {
+            var opt = fundSelect.options[fundSelect.selectedIndex];
+            if (!opt || !opt.getAttribute('data-price')) {
+                priceInput.value = '';
+                currencyLabel.textContent = '—';
+                currencyHidden.value = '';
+                totalInput.value = '';
+                return;
+            }
+
+            var price = opt.getAttribute('data-price');
+            var currency = opt.getAttribute('data-currency') || 'RON';
+            var fundId = opt.value;
+
+            priceInput.value = parseFloat(price).toFixed(4);
+            currencyLabel.textContent = currency;
+            currencyHidden.value = currency;
+
+            updateSellInfo(fundId);
+            calcTotal();
+        }
+
+        fundSelect.addEventListener('change', syncFundData);
+
+        // Daca fondul a fost preselectat (venind din pagina de Recomandari,
+        // cu parametrul fundId in URL), populam automat pretul si moneda la
+        // incarcarea paginii, fara sa astepti evenimentul "change" al userului.
+        if (fundSelect.value) {
+            syncFundData();
+        }
+
+        function updateSellInfo(fundId) {
+            var isSell = document.getElementById('sell').checked;
+            var div = document.getElementById('unitatiDetinute');
+            if (isSell && fundId && portfolioData[fundId] > 0) {
+                document.getElementById('unitatiNr').textContent =
+                    parseFloat(portfolioData[fundId]).toFixed(4);
+                div.classList.remove('d-none');
+            } else {
+                div.classList.add('d-none');
+            }
+        }
+
+        document.getElementById('vindeToatLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            unitsInput.value = parseFloat(document.getElementById('unitatiNr').textContent).toFixed(4);
+            calcTotal();
+        });
+
+        document.querySelectorAll('input[name="operationType"]').forEach(function(r) {
+            r.addEventListener('change', function() {
+                var isSell = this.value === 'SELL';
+                document.getElementById('btnBuy').classList.toggle('d-none', isSell);
+                document.getElementById('btnSell').classList.toggle('d-none', !isSell);
+                var fundId = fundSelect.value;
+                updateSellInfo(fundId);
+                calcTotal();
+            });
+        });
+
+        function calcTotal() {
+            var units = parseFloat(unitsInput.value) || 0;
+            var price = parseFloat(priceInput.value) || 0;
+
+            if (units <= 0 || price <= 0) {
+                totalInput.value = '';
+                return;
+            }
+
+            var total = units * price;
+            totalInput.value = total.toFixed(2);
+        }
+
+        unitsInput.addEventListener('input', calcTotal);
+
+        // Popup de confirmare la submit, in loc de trimitere directa
+        var tradeForm = document.getElementById('tradeForm');
+        var confirmModalEl = document.getElementById('confirmModal');
+        var confirmModal = new bootstrap.Modal(confirmModalEl);
+
+        document.getElementById('btnBuy').addEventListener('click', function(e) {
+            e.preventDefault();
+            openConfirmModal();
+        });
+        document.getElementById('btnSell').addEventListener('click', function(e) {
+            e.preventDefault();
+            openConfirmModal();
+        });
+
+        function openConfirmModal() {
+            if (!tradeForm.checkValidity()) {
+                tradeForm.classList.add('was-validated');
+                return;
+            }
+
+            var opt = fundSelect.options[fundSelect.selectedIndex];
+            var fundLabel = opt ? opt.textContent.trim() : '—';
+            var units = parseFloat(unitsInput.value) || 0;
+            var price = parseFloat(priceInput.value) || 0;
+            var currency = currencyHidden.value || '—';
+            var total = units * price;
+
+            document.getElementById('modalFund').textContent = fundLabel;
+            document.getElementById('modalUnits').textContent = units.toFixed(4);
+            document.getElementById('modalPrice').textContent = price.toFixed(4) + ' ' + currency;
+            document.getElementById('modalTotal').textContent = total.toFixed(2) + ' ' + currency;
+
+            confirmModal.show();
+        }
+
+        document.getElementById('modalConfirmBtn').addEventListener('click', function() {
+            confirmModal.hide();
+            tradeForm.submit();
+        });
+        /*]]>*/
+    </script>
+
+</main></body>
+</html>

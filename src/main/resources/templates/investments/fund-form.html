@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Fond Nou')}">
+<body><main>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-plus-circle me-2 text-success"></i>Adauga Fond de Investitii</h5></div>
+            <div class="card-body">
+                <form th:action="@{/investments/funds/new}" method="post" th:object="${fund}">
+                    <div class="row mb-3">
+                        <div class="col-4">
+                            <label class="form-label">Simbol (ticker) *</label>
+                            <input type="text" th:field="*{symbol}" class="form-control text-uppercase" placeholder="ex: SPY" required/>
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label">Nume complet *</label>
+                            <input type="text" th:field="*{name}" class="form-control" placeholder="ex: SPDR S&P 500 ETF" required/>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-4">
+                            <label class="form-label">Tip fond</label>
+                            <select th:field="*{fundType}" class="form-select">
+                                <option th:each="t : ${fundTypes}" th:value="${t}" th:text="${t}"></option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Nivel risc</label>
+                            <select th:field="*{riskLevel}" class="form-select">
+                                <option th:each="r : ${riskLevels}" th:value="${r}" th:text="${r}"></option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Orizont timp</label>
+                            <select th:field="*{timeHorizon}" class="form-select">
+                                <option th:each="h : ${timeHorizons}" th:value="${h}" th:text="${h}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Randament anual estimat (%)</label>
+                            <input type="number" step="0.01" th:field="*{annualReturnPct}" class="form-control" placeholder="ex: 8.5"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Moneda</label>
+                            <select th:field="*{currency}" class="form-select">
+                                <option value="USD">USD</option>
+                                <option value="RON">RON</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Descriere</label>
+                        <textarea th:field="*{description}" class="form-control" rows="2" placeholder="Scurta descriere a fondului..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Adauga si preia pret</button>
+                        <a th:href="@{/investments/funds}" class="btn btn-outline-secondary">Anuleaza</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</main></body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Tranzactii')}">
+<body><main>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-arrow-left-right me-2 text-success"></i>Tranzactii Financiare</h2>
+        <a th:href="@{/transactions/new}" class="btn btn-success">
+            <i class="bi bi-plus me-1"></i>Tranzactie noua
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0" th:if="${transactions.totalElements > 0}">
+                <thead class="table-light">
+                <tr><th>Data</th><th>Descriere</th><th>Tip</th><th>Subcategorie</th><th class="text-end">Suma</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${transactions}">
+                    <td th:text="${#temporals.format(t.transactionDate, 'dd.MM.yyyy')}"></td>
+                    <td th:text="${t.description}"></td>
+                    <td><span class="badge" th:classappend="${t.type.name() == 'INCOME' ? 'bg-success' : 'bg-danger'}" th:text="${t.type}"></span></td>
+                    <td><span class="badge bg-light text-dark border" th:text="${t.subCategory}"></span></td>
+                    <td class="text-end fw-bold"
+                        th:classappend="${t.type.name() == 'INCOME' ? 'text-success' : 'text-danger'}"
+                        th:text="${(t.type.name() == 'INCOME' ? '+' : '-') + #numbers.formatDecimal(t.amount, 1, 2) + ' RON'}">
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a th:href="@{/transactions/{id}/edit(id=${t.id})}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/transactions/{id}/delete(id=${t.id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Esti sigur ca vrei sa stergi tranzactia?')">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${transactions.totalElements == 0}" class="p-4 text-center text-muted">
+                Nicio tranzactie. <a th:href="@{/transactions/new}">Adauga prima!</a>
+            </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between" th:if="${totalPages > 1}">
+            <span class="text-muted small">Pagina <span th:text="${currentPage + 1}"></span> din <span th:text="${totalPages}"></span></span>
+            <nav><ul class="pagination pagination-sm mb-0">
+                <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/transactions(page=${currentPage - 1})}">&#171;</a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/transactions(page=${currentPage + 1})}">&#187;</a>
+                </li>
+            </ul></nav>
+        </div>
+    </div>
+
+</main></body>
+</html>

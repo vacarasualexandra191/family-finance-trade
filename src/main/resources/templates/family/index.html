@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Familia Mea')}">
+<body><main>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people me-2 text-success"></i>Familia Mea</h2>
+        <span class="badge fs-6"
+              th:classappend="${isParinte ? 'bg-success' : 'bg-info'}"
+              th:text="${isParinte ? 'PARINTE' : 'COPIL'}"></span>
+    </div>
+
+    <!-- PARINTE FARA FAMILIE -->
+    <div th:if="${noFamily != null and noFamily and isParinte}">
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            Nu ai o familie creata inca. Creeaza una si adauga membri!
+        </div>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-house-heart me-2 text-success"></i>Creeaza Familie</h6>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/family/create}" method="post" class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Numele familiei *</label>
+                        <input type="text" name="familyName" class="form-control"
+                               placeholder="ex: Familia Popescu" required="required"/>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-plus-circle me-1"></i>Creeaza Familie
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- COPIL FARA FAMILIE -->
+    <div th:if="${noFamily != null and noFamily and !isParinte}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Nu esti asociat cu nicio familie. Contacteaza parintele.
+    </div>
+
+    <!-- FAMILIE EXISTENTA -->
+    <div th:if="${family != null}">
+
+        <!-- Info familie -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1" th:text="${family.name}"></h5>
+                    <small class="text-muted">
+                        <span th:text="${#lists.size(members)}"></span> membri
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Soldul copilului - vizibil doar pentru COPIL -->
+        <div class="card border-0 shadow-sm mb-4 bg-success text-white" th:if="${!isParinte}">
+            <div class="card-body text-center">
+                <p class="mb-1 small">Sold disponibil (alocat de parinte)</p>
+                <h2 th:text="${#numbers.formatDecimal(currentUser.balance, 1, 2) + ' RON'}">0.00 RON</h2>
+            </div>
+        </div>
+
+        <!-- Lista membri -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Membri familie</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Nume</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Sold disponibil</th>
+                        <th th:if="${isParinte}">Actiuni</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="member : ${members}">
+                        <td>
+                            <span th:text="${member.fullName}"></span>
+                            <span th:if="${member.username == currentUser.username}"
+                                  class="badge bg-secondary ms-1 small">Tu</span>
+                        </td>
+                        <td th:text="${member.username}"></td>
+                        <td th:text="${member.email}"></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${member.familyRole == 'PARINTE' ? 'bg-success' : 'bg-info'}"
+                                  th:text="${member.familyRole}"></span>
+                        </td>
+                        <td>
+                            <!-- Solul disponibil are sens doar pentru rolul de copil;
+                                 balance ramane null pentru parinte, care nu are un
+                                 sold alocat, deci celula ramane goala pentru el. -->
+                            <strong th:if="${member.familyRole == 'COPIL'}"
+                                    th:text="${#numbers.formatDecimal(member.balance, 1, 2) + ' RON'}"></strong>
+                        </td>
+                        <td th:if="${isParinte}">
+                            <div class="d-flex gap-1" th:if="${member.username != currentUser.username}">
+                                <!-- Buton alimentare -->
+                                <button class="btn btn-sm btn-success"
+                                        th:attr="data-bs-toggle='modal',data-bs-target='#fundModal' + ${member.id}">
+                                    <i class="bi bi-plus-circle me-1"></i>Alimenteaza
+                                </button>
+                                <!-- Buton elimina -->
+                                <form th:action="@{/family/remove-member/{id}(id=${member.id})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Elimini membrul din familie?')">
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-person-dash"></i>
+                                    </button>
+                                </form>
+                                <form th:action="@{/family/reset-password/{id}(id=${member.id})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Esti sigur ca vrei sa resetezi parola?')">
+                                    <button class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-key me-1"></i>Reseteaza parola
+                                    </button>
+                                </form>
+                            </div>
+                            <span th:if="${member.username == currentUser.username}"
+                                  class="text-muted small">—</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modaluri alimentare sold - unul per membru -->
+        <div th:if="${isParinte}">
+            <div th:each="member : ${members}" th:if="${member.username != currentUser.username}">
+                <div class="modal fade" th:id="'fundModal' + ${member.id}" tabindex="-1">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h6 class="modal-title">
+                                    <i class="bi bi-plus-circle me-2 text-success"></i>
+                                    Alimenteaza cont — <span th:text="${member.fullName}"></span>
+                                </h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form th:action="@{/family/fund-member/{id}(id=${member.id})}" method="post">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Suma de alimentat (RON) *</label>
+                                        <input type="number" step="0.01" min="0.01"
+                                               name="amount" class="form-control"
+                                               placeholder="ex: 500.00" required="required"/>
+                                    </div>
+                                    <div class="alert alert-info py-1 small">
+                                        Sold curent:
+                                        <strong th:text="${#numbers.formatDecimal(member.balance, 1, 2) + ' RON'}"></strong>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                            data-bs-dismiss="modal">Anuleaza</button>
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-lg me-1"></i>Alimenteaza
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formular adaugare membru - doar PARINTE -->
+        <div class="card border-0 shadow-sm" th:if="${isParinte}">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">
+                    <i class="bi bi-person-plus me-2 text-success"></i>Adauga Membru Nou
+                </h6>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/family/add-member}" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Username *</label>
+                            <input type="text" name="username" class="form-control"
+                                   placeholder="ex: ion.popescu" required="required"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nume complet *</label>
+                            <input type="text" name="fullName" class="form-control"
+                                   placeholder="ex: Ion Popescu" required="required"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control"
+                                   placeholder="ex: ion@email.ro" required="required"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Rol in familie</label>
+                            <select name="familyRole" class="form-select">
+                                <option value="COPIL">Copil</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-person-plus me-1"></i>Adauga Membru
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3" th:if="${!isParinte}">
+            <i class="bi bi-info-circle me-2"></i>
+            Doar parintele poate adauga sau elimina membri din familie.
+        </div>
+
+    </div>
+
+</main></body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Acces interzis - Family Finance</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+</head>
+<body class="bg-light d-flex align-items-center" style="min-height:100vh;">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card border-0 shadow-sm p-5">
+                <div class="display-1 text-danger mb-3">🚫</div>
+                <h1 class="text-danger mb-3">403 — Acces Interzis</h1>
+                <p class="text-muted mb-4">
+                    Nu ai permisiunea necesară pentru a accesa această pagină.
+                    Această funcționalitate este disponibilă doar pentru administratori.
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a th:href="@{/dashboard}" class="btn btn-success">
+                        <i class="bi bi-speedometer2 me-1"></i>Înapoi la Dashboard
+                    </a>
+                    <a th:href="@{/investments}" class="btn btn-outline-secondary">
+                        <i class="bi bi-briefcase me-1"></i>Portofoliu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

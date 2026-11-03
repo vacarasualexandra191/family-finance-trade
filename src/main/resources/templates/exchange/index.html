@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Schimb Valutar')}">
+<body><main>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-currency-exchange me-2 text-success"></i>Schimb Valutar RON → USD</h2>
+    </div>
+
+    <!-- Solduri curente -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body text-center">
+                    <p class="small mb-1 opacity-75">Economii disponibile (RON)</p>
+                    <h3 th:text="${#numbers.formatDecimal(monthlySavings != null ? monthlySavings : 0, 1, 2) + ' RON'}">0 RON</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body text-center">
+                    <p class="small mb-1 opacity-75">Sold USD disponibil pentru investitii</p>
+                    <h3 th:text="${#numbers.formatDecimal(currentUser.balanceUsd != null ? currentUser.balanceUsd : 0, 1, 2) + ' USD'}">0 USD</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-2"></i>
+        Introduceti suma in RON pe care doriti sa o schimbati. Suma in USD este calculata automat
+        la cursul curent. USD-ul obtinut va fi disponibil pentru cumpararea de ETF-uri.
+    </div>
+
+    <!-- Formular RON → USD -->
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-arrow-right me-2 text-success"></i>RON → USD</h6>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/exchange/ron-to-usd}" method="post" id="exchangeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Suma de schimbat (RON) *</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0.01"
+                                       name="amountRon" id="ronIn"
+                                       class="form-control" placeholder="ex: 2000" required/>
+                                <span class="input-group-text">RON</span>
+                            </div>
+                            <small class="text-muted">
+                                Curs folosit: 1 USD = <span th:text="${#numbers.formatDecimal(usdToRon, 1, 2)}">4.80</span> RON
+                            </small>
+                        </div>
+
+                        <!-- Preview conversie automata -->
+                        <div id="previewBox" class="alert alert-success py-2 d-none mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Vei primi:</span>
+                                <strong id="previewText" class="fs-5">—</strong>
+                            </div>
+                        </div>
+
+                        <div id="warnInsuficient" class="alert alert-danger py-2 d-none mb-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Suma depaseste economiile disponibile!
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100" id="btnConfirm" disabled>
+                            <i class="bi bi-check-lg me-1"></i>Confirma schimbul
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var usdToRon = /*[[${usdToRon}]]*/ 4.8;
+        var monthlySavings = /*[[${monthlySavings}]]*/ 0;
+
+        var ronInput = document.getElementById('ronIn');
+        var previewBox = document.getElementById('previewBox');
+        var previewText = document.getElementById('previewText');
+        var warnBox = document.getElementById('warnInsuficient');
+        var btnConfirm = document.getElementById('btnConfirm');
+
+        ronInput.addEventListener('input', updatePreview);
+
+        function updatePreview() {
+            var ron = parseFloat(ronInput.value) || 0;
+
+            if (ron <= 0) {
+                previewBox.classList.add('d-none');
+                warnBox.classList.add('d-none');
+                btnConfirm.disabled = true;
+                return;
+            }
+
+            var usd = ron / usdToRon;
+            previewText.textContent = ron.toFixed(2) + ' RON → ' + usd.toFixed(2) + ' USD';
+            previewBox.classList.remove('d-none');
+
+            if (ron > monthlySavings) {
+                warnBox.classList.remove('d-none');
+                btnConfirm.disabled = true;
+            } else {
+                warnBox.classList.add('d-none');
+                btnConfirm.disabled = false;
+            }
+        }
+    </script>
+
+</main></body>
+</html>
